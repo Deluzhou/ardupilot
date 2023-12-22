@@ -48,6 +48,7 @@
 #include <AP_Frsky_Telem/AP_Frsky_Parameters.h>
 #include <AP_ExternalAHRS/AP_ExternalAHRS.h>
 #include <AP_VideoTX/AP_SmartAudio.h>
+#include <Encipher/AESEncipher.h>
 #if CONFIG_HAL_BOARD == HAL_BOARD_SITL
 #include <SITL/SITL.h>
 #endif
@@ -143,6 +144,9 @@ public:
             FLIGHT_ABORT_LAND    = 7
         };
     };
+
+
+    AESEncipher encipher;
 
     /*
       common parameters for multicopters

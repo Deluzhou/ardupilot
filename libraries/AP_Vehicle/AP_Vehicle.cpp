@@ -73,6 +73,10 @@ const AP_Param::GroupInfo AP_Vehicle::var_info[] = {
     AP_SUBGROUPINFO(airspeed, "ARSPD", 10, AP_Vehicle, AP_Airspeed),
 #endif
 
+    // @Group: ARSPD
+    // @Path: ../Encipher/AESEncipher.cpp
+    AP_SUBGROUPINFO(encipher, "ENcipher_", 11, AP_Vehicle, AESEncipher),
+
     AP_GROUPEND
 };
 

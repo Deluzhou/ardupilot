@@ -816,16 +816,15 @@ void GCS_MAVLINK_Rover::handle_manual_control(const mavlink_message_t &msg)
 
     uint32_t tnow = AP_HAL::millis();
 
-    // manual_override(rover.channel_steer, packet.y, 1000, 2000, tnow);
-    // manual_override(rover.channel_throttle, packet.z, 1000, 2000, tnow);
+#if CONFIG_HAL_BOARD == HAL_BOARD_SITL
     manual_override(rover.channel_rotation, packet.y, 1000, 2000, tnow);
     manual_override(rover.channel_boom, packet.z, 0, 1000, tnow);
     manual_override(rover.channel_cutting_header, packet.x, 1000, 2000, tnow);
     manual_override(rover.channel_support_leg, packet.r, 1000, 2000, tnow);
-    // gcs().send_text(MAV_SEVERITY_INFO, "rotation,y:%d, boom,z:%d cutting_header,x:%d support_leg,r:%d",\
-    //                 (int)((float)packet.y/1000*400)+1500, (int)((float)(packet.z-500)/500*400)+1500, \
-    //                 (int)((float)packet.x/1000*400)+1500, (int)((float)packet.r/1000*400)+1500);
-
+#else
+    manual_override(rover.channel_steer, packet.y, 1000, 2000, tnow);
+    manual_override(rover.channel_throttle, packet.z, 1000, 2000, tnow);
+#endif
     // a manual control message is considered to be a 'heartbeat' from
     // the ground station for failsafe purposes
     gcs().sysid_myggcs_seen(tnow);
