@@ -116,7 +116,8 @@ COMMON_VEHICLE_DEPENDENT_LIBRARIES = [
     'AE_Mission_Arm',
     'AE_Control_Arm',
     'AE_Navigation_Arm',
-    'AE_WPNav_Arm'
+    'AE_WPNav_Arm',
+    'tinycrypt'
 ]
 
 def get_legacy_defines(sketch_name, bld):
