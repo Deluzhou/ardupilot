@@ -1545,7 +1545,7 @@ GCS_MAVLINK::update_receive(uint32_t max_time_us)
         if (parsed_packet || i % 100 == 0) {
             // make sure we don't spend too much time parsing mavlink messages
             if (AP_HAL::micros() - tstart_us > max_time_us) {
-                send_text(MAV_SEVERITY_INFO, "parse packet timeout:%ldus", AP_HAL::micros() - tstart_us);
+                send_text(MAV_SEVERITY_INFO, "parse packet timeout:%ldus", (long int)(AP_HAL::micros() - tstart_us));
                 break;
             }
         }

@@ -538,16 +538,33 @@ void SIM::simstate_send(mavlink_channel_t chan) const
         state.tbm_state.boom_cylinder_L,
         state.tbm_state.turning_angle);
     
-    mavlink_msg_tbm_sim_status_send(chan,
-        state.tbm_state.rdheader_zb,
-        state.tbm_state.rdheader_xb,
-        -state.tbm_state.rdheader_yb,
-        state.tbm_state.roll_b,
-        state.tbm_state.pitch_b,
-        state.tbm_state.yaw_b,
-        state.tbm_state.boom_cylinder_L,
-        state.tbm_state.support_leg_rad,
-        state.tbm_state.cutting_header_S);
+    mavlink_msg_tbm_unity_interface_send(chan,
+        state.tbm_unity_interface.HuiZhuanTai_Left_Length,
+        state.tbm_unity_interface.HuiZhuanTai_Right_Length,
+        state.tbm_unity_interface.HuiZhuanTai_Left_Angle,
+        state.tbm_unity_interface.HuiZhuanTai_Right_Angle,
+        state.tbm_unity_interface.HuiZhuanTai_Angle,
+        state.tbm_unity_interface.DaBi_SiGan_Angle,
+        state.tbm_unity_interface.DaBi_SiGan_Length,
+        state.tbm_unity_interface.Dianji_Angle_HZT,
+        state.tbm_unity_interface.JieGeBuShenSuo_Length,
+        state.tbm_unity_interface.JieGeTou_Rot_Speed,
+        state.tbm_unity_interface.HouTuiCheng_Angle,
+        ToRad(state.rollDeg),
+        ToRad(state.pitchDeg),
+        ToRad(yaw),
+        state.latitude*1.0e7,
+        state.longitude*1.0e7,
+        (float)state.altitude,
+        state.speedN,
+        state.speedE,
+        state.speedD,
+        radians(state.rollRate),
+        radians(state.pitchRate),
+        radians(state.yawRate)
+    );
+    
+    sim_state_send(chan);
 }
 
 /* report SITL state via MAVLink SIM_STATE */

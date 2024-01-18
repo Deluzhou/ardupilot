@@ -141,6 +141,35 @@ void SimTBM::update(const struct sitl_input &input)
 
     sitl->state.tbm_state.cutting_header_S = sprocket_rotation_speed;
     sitl->state.tbm_state.turning_angle = rotation_rad;
+    sitl->state.tbm_state.boom_rad = theta2 + radians(tbm_params._deg_BCF) + 
+                                     acosf((powf(sitl->state.tbm_state.boom_cylinder_L, 2) + powf(tbm_params._mm_BC, 2) - powf(tbm_params._mm_AC, 2)) / (2*sitl->state.tbm_state.boom_cylinder_L*tbm_params._mm_BC));
+
+    // update tbm unity interface
+    float OA_OB, angle_HOC, angle_HOJ_2, angle_EOA_4;
+    OA_OB = sqrt(powf(0.5*rotation_AB, 2) + powf(rotation_OL, 2));
+    angle_HOC = acosf((2*rotation_r*rotation_r-rotation_HC*rotation_HC) / (2*rotation_r*rotation_r));
+    angle_HOJ_2 = (M_PI - angle_HOC) / 2;
+    angle_EOA_4 = atan(2*rotation_OL/rotation_AB);
+    sitl->state.tbm_unity_interface.HuiZhuanTai_Angle = rotation_rad;
+    sitl->state.tbm_unity_interface.HuiZhuanTai_Left_Length = sqrt(powf(rotation_r, 2)+powf(OA_OB, 2)-2*rotation_r*OA_OB*cosf(angle_EOA_4+sitl->state.tbm_unity_interface.HuiZhuanTai_Angle-angle_HOJ_2));
+    sitl->state.tbm_unity_interface.HuiZhuanTai_Right_Length = sqrt(powf(rotation_r, 2)+powf(OA_OB, 2)-2*rotation_r*OA_OB*cosf(angle_EOA_4-sitl->state.tbm_unity_interface.HuiZhuanTai_Angle-angle_HOJ_2));
+    sitl->state.tbm_unity_interface.HuiZhuanTai_Left_Angle = M_PI - acosf((powf(sitl->state.tbm_unity_interface.HuiZhuanTai_Left_Length, 2)+powf(OA_OB, 2)- \
+                                                             powf(rotation_r, 2))/(2*sitl->state.tbm_unity_interface.HuiZhuanTai_Left_Length*OA_OB)) - angle_EOA_4;
+    sitl->state.tbm_unity_interface.HuiZhuanTai_Right_Angle = M_PI - acosf((powf(sitl->state.tbm_unity_interface.HuiZhuanTai_Right_Length, 2)+powf(OA_OB, 2)- \
+                                                             powf(rotation_r, 2))/(2*sitl->state.tbm_unity_interface.HuiZhuanTai_Right_Length*OA_OB)) - angle_EOA_4;
+    
+    sitl->state.tbm_unity_interface.DaBi_SiGan_Length = sqrt(arm_BC*arm_BC+arm_AB*arm_AB-2*arm_BC*arm_AB*cosf(theta2+radians(arm_angle_BCN)));
+    sitl->state.tbm_unity_interface.DaBi_SiGan_Angle = M_PI - radians(arm_angle_BCN) - acosf((powf(sitl->state.tbm_unity_interface.DaBi_SiGan_Length, 2)+arm_BC*arm_BC-arm_AB*arm_AB)/(2*sitl->state.tbm_unity_interface.DaBi_SiGan_Length*arm_BC));
+    sitl->state.tbm_unity_interface.Dianji_Angle_HZT = theta2;
+
+    sitl->state.tbm_unity_interface.JieGeBuShenSuo_Length = 20;
+    sitl->state.tbm_unity_interface.JieGeTou_Rot_Speed = sprocket_rotation_speed;
+    sitl->state.tbm_unity_interface.HouTuiCheng_Angle = radians(30);
+
+    sitl_fdm::testa& a = sitl->state.tbm_unity_interface;
+    Debug("Hl:%f, Hr:%f, Hla:%f, Hra:%f, Ha:%f, DSl:%f, DSa:%f, Da:%f, RS:%f", 
+           a.HuiZhuanTai_Left_Length, a.HuiZhuanTai_Right_Length, degrees(a.HuiZhuanTai_Left_Angle), degrees(a.HuiZhuanTai_Right_Angle), 
+           degrees(a.HuiZhuanTai_Angle), a.DaBi_SiGan_Length, degrees(a.DaBi_SiGan_Angle), degrees(a.Dianji_Angle_HZT), a.JieGeTou_Rot_Speed);
     Debug("                                              ");
 
     SimRover::update(input);

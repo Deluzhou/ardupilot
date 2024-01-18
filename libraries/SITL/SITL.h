@@ -105,7 +105,22 @@ struct sitl_fdm {
         float support_leg_rad;  // radians of support leg.
         float cutting_header_S; // Angular speed of cutting header.
         float turning_angle;    // the angle value of the encoder of the rotary table
+        float boom_rad;         // radians of support boom cylinder.
     } tbm_state;
+
+    struct testa{
+        float HuiZhuanTai_Left_Length;  // 回转台左丝杆长度 （AH）
+        float HuiZhuanTai_Right_Length; // 回转台右丝杆长度 （BC）
+        float HuiZhuanTai_Left_Angle;   // 回转台左丝杆角度 （角HAM）
+        float HuiZhuanTai_Right_Angle;  // 回转台右丝杆角度 （角CBN）
+        float HuiZhuanTai_Angle;        // 回转台角度       （θ）
+        float DaBi_SiGan_Angle;         // 截割臂丝杆角度   （角ACM）
+        float DaBi_SiGan_Length;        // 截割臂丝杆长度   （AC）
+        float Dianji_Angle_HZT;         // 截割臂角度       （θ）
+        float JieGeBuShenSuo_Length;    // 截割臂伸缩长度
+        float JieGeTou_Rot_Speed;       // 截割头旋转速度
+        float HouTuiCheng_Angle;        // 后腿撑角度
+    } tbm_unity_interface;
 };
 
 // number of rc output channels

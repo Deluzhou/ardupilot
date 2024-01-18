@@ -35,6 +35,7 @@ public:
       sitl->state.inclination_state.roll_deg.zero();
       sitl->state.inclination_state.pitch_deg.zero();
       sitl->state.inclination_state.yaw_deg.zero();
+      sitl->state.inclination_state.yaw_deg[0] = -90;
     };
 
     /* update model by one time step */
@@ -54,6 +55,15 @@ private:
     float support_leg_speed; // mm/s
     float rotation_rad;
     bool is_init;
+
+    // unity param
+    float rotation_r = 722; 
+    float rotation_OL = 1700;
+    float rotation_AB = 530;
+    float rotation_HC = 1430;
+    float arm_AB = 1669;
+    float arm_BC = 571.4;
+    float arm_angle_BCN = 57.14;
 
     AE_RobotArmInfo *_armInfo;
     AE_RobotArmInfo_TBM* _armInfo_backend;
