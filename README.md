@@ -3,6 +3,9 @@
 [Rover4.2源代码](https://gitee.com/lisq58/ardupilot_develop/tree/Rover-4.2.0/)
 
 本文档为底层代码开发的说明与帮助
+## 硬件版本配置说明 ##
+***给挖掘机用的硬件*** ./waf configure --board ShuEagleH743
+***给旋翼机用的硬件*** ./waf configure --board Pixhawk6C_NIO
 
 ## Git使用指南 ##
 [git下载地址](https://git-scm.com/downloads)  
