@@ -15,7 +15,7 @@ const AP_Param::GroupInfo AE_RobotArmInfo::var_info[] = {
     // @Description: AE_RobotArmInfo enabled/disabled
     // @Values: 0:Disabled, 1:Enabled
     // @User: Advanced
-    AP_GROUPINFO_FLAGS("ENABLED", 0, AE_RobotArmInfo, _enabled, 0, AP_PARAM_FLAG_ENABLE),
+    // AP_GROUPINFO_FLAGS("ENABLED", 0, AE_RobotArmInfo, _enabled, 0, AP_PARAM_FLAG_ENABLE),
     // AP_GROUPINFO("ENABLED",    1, AE_RobotArmInfo, _enabled, 0),
 
     // @Param: TYPE
