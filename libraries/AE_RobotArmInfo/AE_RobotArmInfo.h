@@ -19,6 +19,8 @@ class AE_RobotArmInfo
 public:
     AE_RobotArmInfo();
 
+    int count = 0;
+
     /* Do not allow copies */
     AE_RobotArmInfo(const AE_RobotArmInfo &other) = delete;
     AE_RobotArmInfo &operator=(const AE_RobotArmInfo&) = delete;

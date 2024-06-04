@@ -87,6 +87,14 @@ public:
         }
     }
 
+    //return Vector3f velocity.x/y/z is boom/forearm/bucket
+    Vector3f get_velocity(void) const
+    {
+        Vector3f velocity;
+        velocity = state.velocity_rad;
+        return velocity;
+    }
+
     Inclination::Status status() const;
     Inclination::Type type() const
     {

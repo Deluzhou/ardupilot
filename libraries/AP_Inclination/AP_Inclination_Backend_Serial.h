@@ -5,6 +5,8 @@
 class AP_Inclination_Backend_Serial : public AP_Inclination_Backend
 {
 public:
+    int test_count_get;
+
     // constructor
     AP_Inclination_Backend_Serial(Inclination::Inclination_State &_state,
                                   AP_Inclination_Params &_params);
@@ -35,8 +37,8 @@ protected:
 
     // it is essential that anyone relying on the base-class update to
     // implement this:
-    virtual bool get_reading(Vector3f &reading_roll_deg, Vector3f &reading_pitch_deg, Vector3f &reading_yaw_deg, InstallLocation location) = 0;
-    
+    // virtual bool get_reading(Vector3f &reading_roll_deg, Vector3f &reading_pitch_deg, Vector3f &reading_yaw_deg, InstallLocation location) = 0;
+    virtual bool get_reading(Vector3f &reading_roll_deg, Vector3f &reading_pitch_deg, Vector3f &reading_yaw_deg, Vector3f &read_velocity_rad, InstallLocation location) = 0;
     // maximum time between readings before we change state to NoData:
     virtual uint16_t read_timeout_ms() const
     {

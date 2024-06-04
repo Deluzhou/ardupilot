@@ -40,166 +40,170 @@ extern const AP_HAL::HAL& hal;
 
 
 // read - return last value measured by sensor
-bool AP_Inclination_HDA436T_Serial::get_reading(Vector3f &reading_roll_deg, Vector3f &reading_pitch_deg, Vector3f &reading_yaw_deg, InstallLocation location)
-{
-    if (uart == nullptr) {
-        return false;
-    }
-
-    float sum_roll_deg = 0;
-    float sum_pitch_deg = 0;
-    float sum_yaw_deg = 0;
-    uint16_t count = 0;
-    uint16_t count_out_of_positive_range = 0;
-    uint16_t count_out_of_negtive_range = 0;
-
-    // read any available lines from the inclination
-    int16_t nbytes = uart->available();
-    while (nbytes-- > 0) {
-        int16_t r = uart->read();
-        if (r < 0) {
-            continue;
-        }
-
-        uint8_t c = (uint8_t)r;
-        // if buffer is empty and this byte is 0x03, add to buffer
-        if (linebuf_len == 0) {
-            if (c == HDA436T_FRAME_HEADER) {
-                linebuf[linebuf_len++] = c;
-            }
-        } else if (linebuf_len == 1) {
-            // if buffer has 1 element and this byte is 0x03, add it to buffer
-            // if not clear the buffer
-            if (c == HDA436T_FRAME_HEADER) {
-                linebuf[linebuf_len++] = c;
-            } else {
-                linebuf_len = 0;
-            }
-        } else {
-            // add character to buffer
-            linebuf[linebuf_len++] = c;
-            // if buffer now has 19 items try to decode it
-            if (linebuf_len == HDA436T_FRAME_LENGTH) {
-                // calculate checksum
-                uint16_t crc = (linebuf[18]<<8) | linebuf[17];
-                if (crc == calc_crc_modbus(linebuf, 17)) {
-                    // calculate roll angle
-                    int32_t roll_raw = ((uint32_t)linebuf[6] << 24) | ((uint32_t)linebuf[5] << 16) | ((uint16_t)linebuf[4] << 8) | linebuf[3];
-                    int32_t pitch_raw = ((uint32_t)linebuf[10] << 24) | ((uint32_t)linebuf[9] << 16) | ((uint16_t)linebuf[8] << 8) | linebuf[7];
-                    int32_t yaw_raw = ((uint32_t)linebuf[14] << 24) | ((uint32_t)linebuf[13] << 16) | ((uint16_t)linebuf[12] << 8) | linebuf[11];
-                    float roll = (float)((roll_raw - ROLL_YAW_OFFSET)*0.001);
-                    float pitch = (float)((pitch_raw - PITCH_OFFSET)*0.001);
-                    float yaw = (float)((yaw_raw - ROLL_YAW_OFFSET)*0.001);
-                    if (roll > INCLINATION_ROLL_MAX_DEGREE || pitch > INCLINATION_PITCH_MAX_DEGREE || yaw > INCLINATION_YAW_MAX_DEGREE) {
-                        // this reading is out of positive range
-                        count_out_of_positive_range++;
-                    } else if ((roll < - INCLINATION_ROLL_MAX_DEGREE) || (pitch < - INCLINATION_PITCH_MAX_DEGREE) || (yaw < - INCLINATION_YAW_MAX_DEGREE)) {
-                        // this reading is out of negtive range
-                        count_out_of_negtive_range++;
-                    } else {
-                        // add degree to sum
-                        //hal.console->printf("555inclination tilt sensor uart: %f\t, %lu\t,  %lu\r\n", roll, roll_raw, (roll_raw - ROLL_YAW_OFFSET));
-                        sum_roll_deg += roll;
-                        sum_pitch_deg += pitch;
-                        sum_yaw_deg += yaw;
-                        count++;
-                    }
-                }
-
-                // clear buffer
-                linebuf_len = 0;
-            }
-        }
-    }
-
-    if (count > 0) {
-        // return average distance of readings
-        switch (location) {
-        case InstallLocation::Boom:     //reading_roll/pitch/yaw_deg.x denote boom angle
-            reading_roll_deg.x  = sum_roll_deg  / count;
-            reading_pitch_deg.x = sum_pitch_deg / count;
-            reading_yaw_deg.x   = sum_yaw_deg   / count;
-            break;
-        case InstallLocation::Forearm:     //reading_roll/pitch/yaw_deg.y denote forearm angle
-            reading_roll_deg.y  = sum_roll_deg  / count;
-            reading_pitch_deg.y = sum_pitch_deg / count;
-            reading_yaw_deg.y   = sum_yaw_deg   / count;
-            break;
-        case InstallLocation::Bucket:     //reading_roll/pitch/yaw_deg.z denote bucket angle
-            reading_roll_deg.z  = sum_roll_deg  / count;
-            reading_pitch_deg.z = sum_pitch_deg / count;
-            reading_yaw_deg.z   = sum_yaw_deg   / count;
-            break;
-
-        default:
-            reading_roll_deg.x  = sum_roll_deg  / count; // LOCATION_NONE we treat it as boom angle
-            reading_pitch_deg.x = sum_pitch_deg / count;
-            reading_yaw_deg.x   = sum_yaw_deg   / count;
-            break;
-        }
-
-        return true;
-    }
-
-    if (count_out_of_positive_range > 0) {
-        // if out of range readings return maximum range for the positive angle
-        switch (location) {
-        case InstallLocation::Boom:     //reading_roll/pitch/yaw_deg.x denote boom angle
-            reading_roll_deg.x  = INCLINATION_ROLL_MAX_DEGREE;
-            reading_pitch_deg.x = INCLINATION_PITCH_MAX_DEGREE;
-            reading_yaw_deg.x   = INCLINATION_YAW_MAX_DEGREE;
-            break;
-        case InstallLocation::Forearm:     //reading_roll/pitch/yaw_deg.y denote forearm angle
-            reading_roll_deg.y  = INCLINATION_ROLL_MAX_DEGREE;
-            reading_pitch_deg.y = INCLINATION_PITCH_MAX_DEGREE;
-            reading_yaw_deg.y   = INCLINATION_YAW_MAX_DEGREE;
-            break;
-        case InstallLocation::Bucket:     //reading_roll/pitch/yaw_deg.z denote bucket angle
-            reading_roll_deg.z  = INCLINATION_ROLL_MAX_DEGREE;
-            reading_pitch_deg.z = INCLINATION_PITCH_MAX_DEGREE;
-            reading_yaw_deg.z   = INCLINATION_YAW_MAX_DEGREE;
-            break;
-
-        default:
-            reading_roll_deg.x  = INCLINATION_ROLL_MAX_DEGREE; // LOCATION_NONE we treat it as boom angle
-            reading_pitch_deg.x = INCLINATION_PITCH_MAX_DEGREE;
-            reading_yaw_deg.x   = INCLINATION_YAW_MAX_DEGREE;
-            break;
-        }
-        return true;
-    }
-
-    if (count_out_of_negtive_range > 0) {
-        // if out of range readings return maximum range for the negtive angle
-        switch (location) {
-        case InstallLocation::Boom:     //reading_roll/pitch/yaw_deg.x denote boom angle
-            reading_roll_deg.x  = -INCLINATION_ROLL_MAX_DEGREE;
-            reading_pitch_deg.x = -INCLINATION_PITCH_MAX_DEGREE;
-            reading_yaw_deg.x   = -INCLINATION_YAW_MAX_DEGREE;
-            break;
-        case InstallLocation::Forearm:     //reading_roll/pitch/yaw_deg.y denote forearm angle
-            reading_roll_deg.y  = -INCLINATION_ROLL_MAX_DEGREE;
-            reading_pitch_deg.y = -INCLINATION_PITCH_MAX_DEGREE;
-            reading_yaw_deg.y   = -INCLINATION_YAW_MAX_DEGREE;
-            break;
-        case InstallLocation::Bucket:     //reading_roll/pitch/yaw_deg.z denote bucket angle
-            reading_roll_deg.z  = -INCLINATION_ROLL_MAX_DEGREE;
-            reading_pitch_deg.z = -INCLINATION_PITCH_MAX_DEGREE;
-            reading_yaw_deg.z   = -INCLINATION_YAW_MAX_DEGREE;
-            break;
-
-        default:
-            reading_roll_deg.x  = -INCLINATION_ROLL_MAX_DEGREE; // LOCATION_NONE we treat it as boom angle
-            reading_pitch_deg.x = -INCLINATION_PITCH_MAX_DEGREE;
-            reading_yaw_deg.x   = -INCLINATION_YAW_MAX_DEGREE;
-            break;
-        }
-        return true;
-    }
-
-    // no readings so return false
+bool AP_Inclination_HDA436T_Serial::get_reading(Vector3f &reading_roll_deg, Vector3f &reading_pitch_deg, Vector3f &reading_yaw_deg, Vector3f &read_velocity_rad, InstallLocation location){
     return false;
 }
+
+// bool AP_Inclination_HDA436T_Serial::get_reading(Vector3f &reading_roll_deg, Vector3f &reading_pitch_deg, Vector3f &reading_yaw_deg, InstallLocation location)
+// {
+//     if (uart == nullptr) {
+//         return false;
+//     }
+
+//     float sum_roll_deg = 0;
+//     float sum_pitch_deg = 0;
+//     float sum_yaw_deg = 0;
+//     uint16_t count = 0;
+//     uint16_t count_out_of_positive_range = 0;
+//     uint16_t count_out_of_negtive_range = 0;
+
+//     // read any available lines from the inclination
+//     int16_t nbytes = uart->available();
+//     while (nbytes-- > 0) {
+//         int16_t r = uart->read();
+//         if (r < 0) {
+//             continue;
+//         }
+
+//         uint8_t c = (uint8_t)r;
+//         // if buffer is empty and this byte is 0x03, add to buffer
+//         if (linebuf_len == 0) {
+//             if (c == HDA436T_FRAME_HEADER) {
+//                 linebuf[linebuf_len++] = c;
+//             }
+//         } else if (linebuf_len == 1) {
+//             // if buffer has 1 element and this byte is 0x03, add it to buffer
+//             // if not clear the buffer
+//             if (c == HDA436T_FRAME_HEADER) {
+//                 linebuf[linebuf_len++] = c;
+//             } else {
+//                 linebuf_len = 0;
+//             }
+//         } else {
+//             // add character to buffer
+//             linebuf[linebuf_len++] = c;
+//             // if buffer now has 19 items try to decode it
+//             if (linebuf_len == HDA436T_FRAME_LENGTH) {
+//                 // calculate checksum
+//                 uint16_t crc = (linebuf[18]<<8) | linebuf[17];
+//                 if (crc == calc_crc_modbus(linebuf, 17)) {
+//                     // calculate roll angle
+//                     int32_t roll_raw = ((uint32_t)linebuf[6] << 24) | ((uint32_t)linebuf[5] << 16) | ((uint16_t)linebuf[4] << 8) | linebuf[3];
+//                     int32_t pitch_raw = ((uint32_t)linebuf[10] << 24) | ((uint32_t)linebuf[9] << 16) | ((uint16_t)linebuf[8] << 8) | linebuf[7];
+//                     int32_t yaw_raw = ((uint32_t)linebuf[14] << 24) | ((uint32_t)linebuf[13] << 16) | ((uint16_t)linebuf[12] << 8) | linebuf[11];
+//                     float roll = (float)((roll_raw - ROLL_YAW_OFFSET)*0.001);
+//                     float pitch = (float)((pitch_raw - PITCH_OFFSET)*0.001);
+//                     float yaw = (float)((yaw_raw - ROLL_YAW_OFFSET)*0.001);
+//                     if (roll > INCLINATION_ROLL_MAX_DEGREE || pitch > INCLINATION_PITCH_MAX_DEGREE || yaw > INCLINATION_YAW_MAX_DEGREE) {
+//                         // this reading is out of positive range
+//                         count_out_of_positive_range++;
+//                     } else if ((roll < - INCLINATION_ROLL_MAX_DEGREE) || (pitch < - INCLINATION_PITCH_MAX_DEGREE) || (yaw < - INCLINATION_YAW_MAX_DEGREE)) {
+//                         // this reading is out of negtive range
+//                         count_out_of_negtive_range++;
+//                     } else {
+//                         // add degree to sum
+//                         //hal.console->printf("555inclination tilt sensor uart: %f\t, %lu\t,  %lu\r\n", roll, roll_raw, (roll_raw - ROLL_YAW_OFFSET));
+//                         sum_roll_deg += roll;
+//                         sum_pitch_deg += pitch;
+//                         sum_yaw_deg += yaw;
+//                         count++;
+//                     }
+//                 }
+
+//                 // clear buffer
+//                 linebuf_len = 0;
+//             }
+//         }
+//     }
+
+//     if (count > 0) {
+//         // return average distance of readings
+//         switch (location) {
+//         case InstallLocation::Boom:     //reading_roll/pitch/yaw_deg.x denote boom angle
+//             reading_roll_deg.x  = sum_roll_deg  / count;
+//             reading_pitch_deg.x = sum_pitch_deg / count;
+//             reading_yaw_deg.x   = sum_yaw_deg   / count;
+//             break;
+//         case InstallLocation::Forearm:     //reading_roll/pitch/yaw_deg.y denote forearm angle
+//             reading_roll_deg.y  = sum_roll_deg  / count;
+//             reading_pitch_deg.y = sum_pitch_deg / count;
+//             reading_yaw_deg.y   = sum_yaw_deg   / count;
+//             break;
+//         case InstallLocation::Bucket:     //reading_roll/pitch/yaw_deg.z denote bucket angle
+//             reading_roll_deg.z  = sum_roll_deg  / count;
+//             reading_pitch_deg.z = sum_pitch_deg / count;
+//             reading_yaw_deg.z   = sum_yaw_deg   / count;
+//             break;
+
+//         default:
+//             reading_roll_deg.x  = sum_roll_deg  / count; // LOCATION_NONE we treat it as boom angle
+//             reading_pitch_deg.x = sum_pitch_deg / count;
+//             reading_yaw_deg.x   = sum_yaw_deg   / count;
+//             break;
+//         }
+
+//         return true;
+//     }
+
+//     if (count_out_of_positive_range > 0) {
+//         // if out of range readings return maximum range for the positive angle
+//         switch (location) {
+//         case InstallLocation::Boom:     //reading_roll/pitch/yaw_deg.x denote boom angle
+//             reading_roll_deg.x  = INCLINATION_ROLL_MAX_DEGREE;
+//             reading_pitch_deg.x = INCLINATION_PITCH_MAX_DEGREE;
+//             reading_yaw_deg.x   = INCLINATION_YAW_MAX_DEGREE;
+//             break;
+//         case InstallLocation::Forearm:     //reading_roll/pitch/yaw_deg.y denote forearm angle
+//             reading_roll_deg.y  = INCLINATION_ROLL_MAX_DEGREE;
+//             reading_pitch_deg.y = INCLINATION_PITCH_MAX_DEGREE;
+//             reading_yaw_deg.y   = INCLINATION_YAW_MAX_DEGREE;
+//             break;
+//         case InstallLocation::Bucket:     //reading_roll/pitch/yaw_deg.z denote bucket angle
+//             reading_roll_deg.z  = INCLINATION_ROLL_MAX_DEGREE;
+//             reading_pitch_deg.z = INCLINATION_PITCH_MAX_DEGREE;
+//             reading_yaw_deg.z   = INCLINATION_YAW_MAX_DEGREE;
+//             break;
+
+//         default:
+//             reading_roll_deg.x  = INCLINATION_ROLL_MAX_DEGREE; // LOCATION_NONE we treat it as boom angle
+//             reading_pitch_deg.x = INCLINATION_PITCH_MAX_DEGREE;
+//             reading_yaw_deg.x   = INCLINATION_YAW_MAX_DEGREE;
+//             break;
+//         }
+//         return true;
+//     }
+
+//     if (count_out_of_negtive_range > 0) {
+//         // if out of range readings return maximum range for the negtive angle
+//         switch (location) {
+//         case InstallLocation::Boom:     //reading_roll/pitch/yaw_deg.x denote boom angle
+//             reading_roll_deg.x  = -INCLINATION_ROLL_MAX_DEGREE;
+//             reading_pitch_deg.x = -INCLINATION_PITCH_MAX_DEGREE;
+//             reading_yaw_deg.x   = -INCLINATION_YAW_MAX_DEGREE;
+//             break;
+//         case InstallLocation::Forearm:     //reading_roll/pitch/yaw_deg.y denote forearm angle
+//             reading_roll_deg.y  = -INCLINATION_ROLL_MAX_DEGREE;
+//             reading_pitch_deg.y = -INCLINATION_PITCH_MAX_DEGREE;
+//             reading_yaw_deg.y   = -INCLINATION_YAW_MAX_DEGREE;
+//             break;
+//         case InstallLocation::Bucket:     //reading_roll/pitch/yaw_deg.z denote bucket angle
+//             reading_roll_deg.z  = -INCLINATION_ROLL_MAX_DEGREE;
+//             reading_pitch_deg.z = -INCLINATION_PITCH_MAX_DEGREE;
+//             reading_yaw_deg.z   = -INCLINATION_YAW_MAX_DEGREE;
+//             break;
+
+//         default:
+//             reading_roll_deg.x  = -INCLINATION_ROLL_MAX_DEGREE; // LOCATION_NONE we treat it as boom angle
+//             reading_pitch_deg.x = -INCLINATION_PITCH_MAX_DEGREE;
+//             reading_yaw_deg.x   = -INCLINATION_YAW_MAX_DEGREE;
+//             break;
+//         }
+//         return true;
+//     }
+
+//     // no readings so return false
+//     return false;
+// }
 
 // get temperature reading
 // We write the function of reading temperature here in advance for later use.

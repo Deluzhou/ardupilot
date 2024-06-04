@@ -176,7 +176,6 @@ bool AE_RobotArmInfo_Excavator::calc_excavator_info(const AP_AHRS &ahrs, const I
                 (float)degrees(_euler_bucket_e2b_from_sensor.x),
                 (float)degrees(_euler_bucket_e2b_from_sensor.y),
                 (float)degrees(_euler_bucket_e2b_from_sensor.z)); */
-       
     calc_bucket_position(boom_to_body,forearm_to_body,bucket_to_body,slewing_to_body);
     calc_oil_cylinder_length(_exca_dh_anger.boom_to_slewing, _exca_dh_anger.forearm_to_boom, _exca_dh_anger.bucket_to_forearm);
     return true;

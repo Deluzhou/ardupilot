@@ -1,4 +1,9 @@
 {
     "cSpell.language": "en-GB",
-    "astyle.astylerc": "${workspaceFolder}/Tools/CodeStyle/astylerc"
+    "astyle.astylerc": "${workspaceFolder}/Tools/CodeStyle/astylerc",
+    "files.associations": {
+        "*.inc": "cpp",
+        "typeinfo": "cpp"
+    },
+    "cmake.sourceDirectory": "/home/drew/git-source/SHU_Excavator_new/SHU_Excavator/modules/gtest/googletest"
 }

@@ -35,6 +35,7 @@ private:
     Vector3f _integral;     // 积分项，用于消除静态误差
     
     bool getCurrentAngle(Vector3f& currentAngle);       //获取当前角度
+    bool getCurrentVelocity(Vector3f &currentVelocity); //获取当前角速度
 
     uint64_t    _last_update_xy_us;     // system time (in microseconds) since last update_xy_controller call
     float       _dt;                    // time difference (in seconds) between calls from the main program

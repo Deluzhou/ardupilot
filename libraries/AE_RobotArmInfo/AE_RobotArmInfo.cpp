@@ -389,8 +389,19 @@ void AE_RobotArmInfo::update()
     }
 
     // update estimator of robot arm info
-    if (_backend != nullptr && _enabled) {
+    if (_backend != nullptr) {
         _backend->update();
+    }
+
+    count++;
+    if(count > 50){
+        count = 0;
+        Inclination *inclination = AP::inclination();
+        if (inclination == nullptr) {
+            return ;
+        }
+        Vector3f currentVelocity = inclination->get_velocity_rad(Boom);
+        hal.console->printf("\r\n\r\ncurrentVelocity = x: %f, y: %f, z:%f\r\n\r\n", currentVelocity.x, currentVelocity.y, currentVelocity.z);
     }
 
     const uint32_t now = AP_HAL::millis();

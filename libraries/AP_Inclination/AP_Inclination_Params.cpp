@@ -6,9 +6,9 @@ const AP_Param::GroupInfo AP_Inclination_Params::var_info[] = {
     // @Param: TYPE
     // @DisplayName: inclination type
     // @Description: Type of connected inclination
-    // @Values: 0:None,1:HDA436T_Serial,2:three_HDA436Ts_Serial,100:SIM
+    // @Values: 0:None, 1:HDA436T_Serial, 2:three_HDA436Ts_Serial, 3:HDA436Ts_binary_Serial, 100:SIM
     // @User: Standard
-    AP_GROUPINFO_FLAGS("TYPE", 1, AP_Inclination_Params, type, 2, AP_PARAM_FLAG_ENABLE),
+    AP_GROUPINFO_FLAGS("TYPE", 1, AP_Inclination_Params, type, 3, AP_PARAM_FLAG_ENABLE),
 
     // @Param: LOCATION
     // @DisplayName: Inclination location

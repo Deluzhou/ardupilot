@@ -28,6 +28,7 @@ public:
         NONE   = 0,
         HDA436T_Serial = 1,
         three_HDA436Ts_Serial = 2,
+        HDA436Ts_binary_Serial = 3,
         SIM = 100,
     };
 
@@ -44,6 +45,7 @@ public:
         Vector3f roll_deg;                 // roll_deg.x/.y/.z denote boom/forearm/bucket angle in degree
         Vector3f pitch_deg;                // pitch_deg.x/.y/.z denote boom/forearm/bucket angle in degree
         Vector3f yaw_deg;                  // yaw_deg.x/.y/.z denote boom/forearm/bucket angle in degree
+        Vector3f velocity_rad;              //velocity_rad.x/.y/.z denote boom/forearm/bucket angle velocity in rad.
         Vector3f temperature;              // temperature.x/.y/.z denote boom/forearm/bucket angle in degree
         enum Inclination::Status status; // sensor status
         uint8_t  range_valid_count;     // number of consecutive valid readings (maxes out at 3)
@@ -99,6 +101,7 @@ public:
     float yaw_deg_location(enum InstallLocation location) const;
     //return Vector3f deg.x/y/z is roll/pitch/yaw
     Vector3f get_deg_location(enum InstallLocation location) const;
+    Vector3f get_velocity_rad(enum InstallLocation location) const;
     Inclination::Status status_location(enum InstallLocation location) const;
     bool has_data_location(enum InstallLocation location) const;
     uint32_t last_reading_ms(enum InstallLocation location) const;
@@ -113,6 +116,9 @@ protected:
     AP_Inclination_Params params[INCLINATION_MAX_INSTANCES];
 
 private:
+    int test_count_update_1;
+    // int test_count_update_2;
+
     static Inclination *_singleton;
 
     Inclination_State state[INCLINATION_MAX_INSTANCES];

@@ -1,6 +1,7 @@
 #include "AP_Inclination.h"
 #include "AP_Inclination_HDA436T_Serial.h"
 #include "AP_Inclination_3HDA436Ts_Serial.h"
+#include "AP_Inclination_3HDAs_binary_Serial.h"
 #include "AP_Inclination_SITL.h"
 #include <AP_BoardConfig/AP_BoardConfig.h>
 #include <AP_Logger/AP_Logger.h>
@@ -101,12 +102,12 @@ void Inclination::update(void)
                 continue;
             }
 
-            drivers[i]->update((InstallLocation)(i+1));
+            drivers[i]->update((InstallLocation)(i+1));            
         }
     }
 
     //if AP_Inclination_3HDA436Ts_Serial is used, then update the other 2 drivers state by hand.
-    if ((Type)params[0].type.get() == Type::three_HDA436Ts_Serial || (Type)params[0].type.get() == Type::SIM) {
+    if ((Type)params[0].type.get() == Type::three_HDA436Ts_Serial || (Type)params[0].type.get() == Type::SIM || (Type)params[0].type.get() == Type::HDA436Ts_binary_Serial) {
         for(uint8_t i=1; i<INCLINATION_MAX_INSTANCES; i++)
         {
             state[i] = state[0];
@@ -160,6 +161,15 @@ void Inclination::detect_instance(uint8_t instance, uint8_t& serial_instance)
             }
         }
         break;
+
+    case Type::HDA436Ts_binary_Serial:
+    if (AP_Inclination_3HDAs_binary_Serial::detect(serial_instance)) {
+        for(uint8_t i=instance; i<INCLINATION_MAX_INSTANCES; i++)
+        {
+            _add_backend(new AP_Inclination_3HDAs_binary_Serial(state[i], params[i]), i, serial_instance++);
+        }
+    }
+    break;
 
     case Type::SIM:
     #if CONFIG_HAL_BOARD == HAL_BOARD_SITL
@@ -241,10 +251,22 @@ Vector3f Inclination::get_deg_location(enum InstallLocation location) const
 {
     AP_Inclination_Backend *backend = find_instance(location);
     if (backend == nullptr) {
-        AP_HAL::panic("Inclination backend is nullptr, please check the hardware and param table:ICLI->LOCATION.");
         return {0,0,0};
+        // AP_HAL::panic("Inclination backend is nullptr, please check the hardware and param table:ICLI->LOCATION.");
+        // return {0,0,0};
     }
     return backend->get_deg_from_location(location);
+}
+
+Vector3f Inclination::get_velocity_rad(enum InstallLocation location) const
+{
+    AP_Inclination_Backend *backend = find_instance(location);
+    if (backend == nullptr) {
+        return {0,0,0};
+        // AP_HAL::panic("Inclination backend is nullptr, please check the hardware and param table:ICLI->LOCATION.");
+        // return {0,0,0};
+    }
+    return backend->get_velocity();
 }
 
 float Inclination::roll_deg_location(enum InstallLocation location) const

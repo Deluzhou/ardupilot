@@ -203,3 +203,13 @@ bool AE_AngleControl::getCurrentAngle(Vector3f& currentAngle)
     
     return true;
 }
+
+bool AE_AngleControl::getCurrentVelocity(Vector3f& currentVelocity){
+    Inclination *inclination = AP::inclination();
+    if (inclination == nullptr) {
+        return false;
+    }
+
+    currentVelocity = inclination->get_velocity_rad(Boom);
+    return true;
+}
